@@ -27,21 +27,21 @@ class AccountTreasuryForecastInvoice(models.Model):
     _name = 'account.treasury.forecast.invoice'
     _description = 'Treasury Forecast Invoice'
 
-    invoice_id = fields.Many2one("account.invoice", string="Invoice")
+    invoice_id = fields.Many2one("account.invoice", string="Factura")
     date_due = fields.Date(string="Due Date")
-    partner_id = fields.Many2one("res.partner", string="Partner")
-    journal_id = fields.Many2one("account.journal", string="Journal")
+    partner_id = fields.Many2one("res.partner", string="Empresa")
+    journal_id = fields.Many2one("account.journal", string="Diario")
     state = fields.Selection([('draft', 'Draft'), ('proforma', 'Pro-forma'),
                               ('proforma2', 'Pro-forma'), ('open', 'Opened'),
                               ('paid', 'Paid'), ('cancel', 'Canceled')],
                              string="State")
-    base_amount = fields.Float(string="Base Amount",
+    base_amount = fields.Float(string="Monto base",
                                digits_compute=dp.get_precision('Account'))
-    tax_amount = fields.Float(string="Tax Amount",
+    tax_amount = fields.Float(string="Impuestos",
                               digits_compute=dp.get_precision('Account'))
-    total_amount = fields.Float(string="Total Amount",
+    total_amount = fields.Float(string="Monto total",
                                 digits_compute=dp.get_precision('Account'))
-    residual_amount = fields.Float(string="Residual Amount",
+    residual_amount = fields.Float(string="Monto residual",
                                    digits_compute=dp.get_precision('Account'))
 
 
