@@ -63,14 +63,14 @@ class AccountTreasuryForecast(models.Model):
         balance += self.start_amount
         self.final_amount = balance
 
-    name = fields.Char(string="Description", required=True)
+    name = fields.Char(string="Descripcion", required=True)
     template_id = fields.Many2one("account.treasury.forecast.template",
                                   string="Template", required=True)
-    start_date = fields.Date(string="Start Date", required=True)
-    end_date = fields.Date(string="End Date", required=True)
-    start_amount = fields.Float(string="Start Amount",
+    start_date = fields.Date(string="Fecha inicial", required=True)
+    end_date = fields.Date(string="Fecha final", required=True)
+    start_amount = fields.Float(string="Monto inicial",
                                 digits_compute=dp.get_precision('Account'))
-    final_amount = fields.Float(string="Final Amount",
+    final_amount = fields.Float(string="Monto final",
                                 compute="calc_final_amount",
                                 digits_compute=dp.get_precision('Account'))
     check_draft = fields.Boolean(string="Draft", default=1)
