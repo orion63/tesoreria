@@ -24,7 +24,7 @@ class AccountTreasuryForecastTemplate(models.Model):
     _name = 'account.treasury.forecast.template'
     _description = 'Treasury Forecast Template'
 
-    name = fields.Char(string="Description", required=True)
+    name = fields.Char(string="Descripcion", required=True)
     recurring_line_ids = fields.One2many(
         "account.treasury.forecast.line.template", "treasury_template_id",
         string="Recurring Line", domain=[('line_type', '=', 'recurring')])
@@ -37,17 +37,17 @@ class AccountTreasuryForecastLineTemplate(models.Model):
     _name = 'account.treasury.forecast.line.template'
     _description = 'Treasury Forecast Line Template'
 
-    name = fields.Char(string="Description", required=True)
-    date = fields.Date(string="Date")
+    name = fields.Char(string="Descripcion", required=True)
+    date = fields.Date(string="Fecha")
     line_type = fields.Selection([('recurring', 'Recurring'),
                                   ('variable', 'Variable')],
                                  string="Treasury Line Type")
-    partner_id = fields.Many2one("res.partner", string="Partner")
-    journal_id = fields.Many2one("account.journal", string="Journal",
+    partner_id = fields.Many2one("res.partner", string="Empresa")
+    journal_id = fields.Many2one("account.journal", string="Diario",
                                  domain=[("type", "=", "purchase")])
-    invoice_id = fields.Many2one("account.invoice", string="Invoice",
+    invoice_id = fields.Many2one("account.invoice", string="Factura",
                                  domain=[("type", "=", "in_invoice")])
-    amount = fields.Float(string="Amount",
+    amount = fields.Float(string="Monto",
                           digits_compute=dp.get_precision('Account'))
     paid = fields.Boolean(string="Invoiced/Paid")
     treasury_template_id = fields.Many2one(
