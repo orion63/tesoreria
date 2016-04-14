@@ -25,7 +25,7 @@
     ],
     "author": "OdooMRP team,"
               "AvanzOSC,"
-              "Serv. Tecnol. Avanzados - Pedro M. Baeza - Gonzalo Laurie",
+              "Serv. Tecnol. Avanzados - Pedro M. Baeza - Gonzalo Laurie - 2016",
     "website": "http://www.odoomrp.com",
     "category": "Accounting",
     "description": """
