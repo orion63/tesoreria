@@ -21,6 +21,171 @@
 
 import openerp.addons.decimal_precision as dp
 from openerp import models, fields, api, exceptions, _
+from openerp.osv import osv
+import datetime
+
+
+#class AccountTreasuryForecastWizardInvoice(models.Model):
+class AccountTreasuryForecastWizardInvoice(osv.TransientModel):
+    _name = 'account.treasury.forecast.wizard.invoice'
+    _description = 'Treasury Forecast Wizard Invoice'
+
+    invoice_id = fields.Many2one("account.invoice", string="Factura")
+    date_due = fields.Date(string="Fecha pago")
+    partner_id = fields.Many2one("res.partner", string="Empresa")
+    total_amount = fields.Float(string="Monto total", digits_compute=dp.get_precision('Account'))
+    wizard_id = fields.Many2one('account.treasury.forecast.weekwizard', 'Wizard')
+
+
+class AccountTreasureForecastWeekWizard(osv.TransientModel):
+#class AccountTreasureForecastWeekWizard(models.Model):
+    _name = 'account.treasury.forecast.weekwizard'
+    name = 'Flujo'
+    start_date = fields.Date(string="Fecha inicial")
+    forecast_id = fields.Many2one("account.treasury.forecast", string="Forecast")
+    comentarios = fields.Char('comentarios')
+    in_invoice_s1 = fields.One2many('account.treasury.forecast.wizard.invoice', 'wizard_id', 'Factura Entrante')
+    in_invoice_s2 = fields.One2many('account.treasury.forecast.wizard.invoice', 'wizard_id', 'Factura Entrante')
+    in_invoice_s3 = fields.One2many('account.treasury.forecast.wizard.invoice', 'wizard_id', 'Factura Entrante')
+    in_invoice_s4 = fields.One2many('account.treasury.forecast.wizard.invoice', 'wizard_id', 'Factura Entrante')
+    out_invoice_s1 = fields.One2many('account.treasury.forecast.wizard.invoice', 'wizard_id', 'Factura Saliente')
+    out_invoice_s2 = fields.One2many('account.treasury.forecast.wizard.invoice', 'wizard_id', 'Factura Saliente')
+    out_invoice_s3 = fields.One2many('account.treasury.forecast.wizard.invoice', 'wizard_id', 'Factura Saliente')
+    out_invoice_s4 = fields.One2many('account.treasury.forecast.wizard.invoice', 'wizard_id', 'Factura Saliente')
+
+
+    def default_get(self, cr, uid, fields, context=None):
+        print('---------------------------')
+        print(context)
+        if context is None:
+            context = {}
+        res = super(AccountTreasureForecastWeekWizard, self).default_get(cr, uid, fields, context)
+        if context.get('forecast_id'):
+            forecast_id = context['forecast_id']
+            res['forecast_id'] = forecast_id            
+        res['name']  = 'Flujo de caja'
+        return res
+
+
+    @api.onchange('start_date') # if these fields are changed, call method
+    def check_change(self):
+        if self.start_date != False:
+            self.name = 'Flujo de caja'
+            self.do_calculate()
+        # no requiere devolver nada
+
+    @api.multi
+    def do_calculate_button(self, cr, uid, fields, context=None):
+        return self.do_calculate()
+
+    @api.multi
+    def do_reset_invoices(self):
+        in_invoices_s1 = []
+        for invoice in self.in_invoice_s1:
+            in_invoices_s1.append((2, invoice.id))
+
+        in_invoices_s2 = []
+        for invoice in self.in_invoice_s2:
+            in_invoices_s2.append((2, invoice.id))
+
+        in_invoices_s3 = []
+        for invoice in self.in_invoice_s3:
+            in_invoices_s3.append((2, invoice.id))
+
+        in_invoices_s4 = []
+        for invoice in self.in_invoice_s4:
+            in_invoices_s4.append((2, invoice.id))
+
+        out_invoices_s1 = []
+        for invoice in self.out_invoice_s1:
+            out_invoices_s1.append((2, invoice.id))
+
+        out_invoices_s2 = []
+        for invoice in self.out_invoice_s2:
+            out_invoices_s2.append((2, invoice.id))
+
+        out_invoices_s3 = []
+        for invoice in self.out_invoice_s3:
+            out_invoices_s3.append((2, invoice.id))
+
+        out_invoices_s4 = []
+        for invoice in self.out_invoice_s4:
+            out_invoices_s4.append((2, invoice.id))
+
+        self.update({'in_invoice_s1': in_invoices_s1, 'in_invoice_s2': in_invoices_s2, 'in_invoice_s3': in_invoices_s3, 'in_invoice_s4': in_invoices_s4,
+            'out_invoice_s1': out_invoices_s1, 'out_invoice_s2': out_invoices_s2, 'out_invoice_s3': out_invoices_s3, 'out_invoice_s4': out_invoices_s4})
+        return True        
+
+    @api.multi
+    def do_calculate(self):
+        self.name = 'Flujo de caja'
+        # primero, hay que eliminar los anteriores!
+        self.do_reset_invoices()
+
+        # obtengamos el forecast
+        forecast_obj = self.env['account.treasury.forecast']
+        forecast = forecast_obj.browse(self.forecast_id.id)
+
+        # preparamos las fechas
+        date_1 = datetime.datetime.strptime(self.start_date, '%Y-%m-%d').date()
+        date_2 = date_1 + datetime.timedelta(days=7)
+        date_3 = date_2 + datetime.timedelta(days=7)
+        date_4 = date_3 + datetime.timedelta(days=7)
+
+        # procesamos las entrantes
+        in_invoices_s1 = []
+        in_invoices_s2 = []
+        in_invoices_s3 = []
+        in_invoices_s4 = []
+        self.comentarios = 'Recalculando'
+        for invoice in forecast.in_invoice_ids:
+            values = {
+                'date_due': invoice.date_due,
+                'total_amount': invoice.total_amount,
+                'invoice_id': invoice.invoice_id,
+                'partner_id': invoice.partner_id
+            }
+            invoice_date_due = datetime.datetime.strptime(invoice.date_due, '%Y-%m-%d').date()
+            self.comentarios = self.comentarios + '.'
+            if invoice_date_due < date_2:
+                in_invoices_s1 += [values]
+            else:
+                if invoice_date_due < date_3:
+                    in_invoices_s2 += [values]
+                else:
+                    if invoice_date_due < date_4:
+                        in_invoices_s3 += [values]
+                    else:
+                        in_invoices_s4 += [values]
+        self.comentarios = 'Recalculado'
+
+        # procesamos las salientes
+        out_invoices_s1 = []
+        out_invoices_s2 = []
+        out_invoices_s3 = []
+        out_invoices_s4 = []
+        for invoice in forecast.out_invoice_ids:
+            values = {
+                'date_due': invoice.date_due,
+                'total_amount': invoice.total_amount,
+                'invoice_id': invoice.invoice_id,
+                'partner_id': invoice.partner_id
+            }
+            invoice_date_due = datetime.datetime.strptime(invoice.date_due, '%Y-%m-%d').date()
+            if invoice_date_due < date_2:
+                out_invoices_s1 += [values]
+            else:
+                if invoice_date_due < date_3:
+                    out_invoices_s2 += [values]
+                else:
+                    if invoice_date_due < date_4:
+                        out_invoices_s3 += [values]
+                    else:
+                        out_invoices_s4 += [values]                        
+
+        self.update({'in_invoice_s1': in_invoices_s1, 'in_invoice_s2': in_invoices_s2, 'in_invoice_s3': in_invoices_s3, 'in_invoice_s4': in_invoices_s4,
+            'out_invoice_s1': out_invoices_s1, 'out_invoice_s2': out_invoices_s2, 'out_invoice_s3': out_invoices_s3, 'out_invoice_s4': out_invoices_s4})
+        return True
 
 
 class AccountTreasuryForecastInvoice(models.Model):
@@ -28,7 +193,7 @@ class AccountTreasuryForecastInvoice(models.Model):
     _description = 'Treasury Forecast Invoice'
 
     invoice_id = fields.Many2one("account.invoice", string="Factura")
-    date_due = fields.Date(string="Due Date")
+    date_due = fields.Date(string="Fecha pago")
     partner_id = fields.Many2one("res.partner", string="Empresa")
     journal_id = fields.Many2one("account.journal", string="Diario")
     state = fields.Selection([('draft', 'Draft'), ('proforma', 'Pro-forma'),
@@ -63,29 +228,29 @@ class AccountTreasuryForecast(models.Model):
         balance += self.start_amount
         self.final_amount = balance
 
-    name = fields.Char(string="Descripcion", required=True)
+    name = fields.Char(string="Descripción", required=True)
     template_id = fields.Many2one("account.treasury.forecast.template",
-                                  string="Template", required=True)
-    start_date = fields.Date(string="Fecha inicial", required=True)
-    end_date = fields.Date(string="Fecha final", required=True)
-    start_amount = fields.Float(string="Monto inicial",
+                                  string="Plantilla", required=True)
+    start_date = fields.Date(string="Fecha Inicial", required=True)
+    end_date = fields.Date(string="Fecha Final", required=True)
+    start_amount = fields.Float(string="Monto Inicial",
                                 digits_compute=dp.get_precision('Account'))
-    final_amount = fields.Float(string="Monto final",
+    final_amount = fields.Float(string="Monto Final",
                                 compute="calc_final_amount",
                                 digits_compute=dp.get_precision('Account'))
-    check_draft = fields.Boolean(string="Draft", default=1)
+    check_draft = fields.Boolean(string="Borrador", default=1)
     check_proforma = fields.Boolean(string="Proforma", default=1)
-    check_open = fields.Boolean(string="Opened", default=1)
+    check_open = fields.Boolean(string="Abierto", default=1)
     out_invoice_ids = fields.Many2many(
         comodel_name="account.treasury.forecast.invoice",
         relation="account_treasury_forecast_out_invoice_rel",
         column1="treasury_id", column2="out_invoice_id",
-        string="Out Invoices")
+        string="Facturas salientes")
     in_invoice_ids = fields.Many2many(
         comodel_name="account.treasury.forecast.invoice",
         relation="account_treasury_forecast_in_invoice_rel",
         column1="treasury_id", column2="in_invoice_id",
-        string="In Invoices")
+        string="Facturas entrantes")
     recurring_line_ids = fields.One2many(
         "account.treasury.forecast.line", "treasury_id",
         string="Recurring Lines", domain=[('line_type', '=', 'recurring')])
@@ -187,6 +352,37 @@ class AccountTreasuryForecast(models.Model):
         return new_line_ids
 
 
+    @api.multi
+    def show_week_wizard(self):
+        # http://stackoverflow.com/questions/31907694/open-another-module-form-view-with-button
+    
+        wizard_obj = self.env['account.treasury.forecast.weekwizard']
+        # primero buscaremos si ya tenemos uno
+        wizard_ids = wizard_obj.search([('forecast_id', '=', self.id),])
+        if len(wizard_ids) != 0:
+            wizard_id = wizard_ids[0].id
+            # deberíamos limpiar los datos
+            wizard_ids[0].do_reset_invoices()
+        else:
+            values = {
+                'forecast_id': self.id,
+                'comentarios': 'Estos son...',
+            }
+            new_ids = wizard_obj.create(values)
+            wizard_id = new_ids.id
+        
+        basura ={
+            'name': ('Proyeccion'),
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'account.treasury.forecast.weekwizard',
+            'res_id': wizard_id,
+            'view_id': False,
+            'type': 'ir.actions.act_window',
+        }          
+        return basura   
+
+
 class AccountTreasuryForecastLine(models.Model):
     _name = 'account.treasury.forecast.line'
     _description = 'Treasury Forecast Line'
@@ -203,3 +399,4 @@ class AccountTreasuryForecastLine(models.Model):
         "account.treasury.forecast.line.template", string="Template Line")
     treasury_id = fields.Many2one("account.treasury.forecast",
                                   string="Treasury")
+

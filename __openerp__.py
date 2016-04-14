@@ -25,7 +25,7 @@
     ],
     "author": "OdooMRP team,"
               "AvanzOSC,"
-              "Serv. Tecnol. Avanzados - Pedro M. Baeza",
+              "Serv. Tecnol. Avanzados - Pedro M. Baeza - Gonzalo Laurie",
     "website": "http://www.odoomrp.com",
     "category": "Accounting",
     "description": """
@@ -34,10 +34,9 @@
         recurring payments and variable payments.
     """,
     'data': [
-        "security/ir.model.access.csv",
-        "wizard/wiz_create_invoice_view.xml",
+        "wizard/wiz_create_invoice_view.xml", 
         "views/account_treasury_forecast_view.xml",
-        "views/account_treasury_forecast_template_view.xml",
+        "views/account_treasury_forecast_template_view.xml",                   
     ],
     'demo': [],
     'installable': True,

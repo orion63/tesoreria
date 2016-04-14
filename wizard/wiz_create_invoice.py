@@ -52,3 +52,4 @@ class WizCreateInvoice(models.TransientModel):
                             'partner_id': self.partner_id.id,
                             'amount': self.amount})
         return {'type': 'ir.actions.act_window_close'}
+

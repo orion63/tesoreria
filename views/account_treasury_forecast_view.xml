@@ -2,7 +2,6 @@
 <openerp>
     <data>
 
-
         <record model="ir.ui.view" id="account_treasury_forecast_invoice_tree_view">
             <field name="name">account.treasury.forecast.invoice.tree</field>
             <field name="model">account.treasury.forecast.invoice</field>
@@ -62,12 +61,27 @@
             </field>
         </record>
 
+        <record id="action_open_wizard" model="ir.actions.act_window">
+            <field name="name">Wizard</field>
+            <field name="res_model">account.treasury.forecast.weekwizard</field> 
+            <field name="src_model">account.treasury.forecast</field> 
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>             
+            <field name="context">{'forecast_id': active_id}</field> 
+        </record>     
+
+
         <record model="ir.ui.view" id="account_treasury_forecast_form_view">
             <field name="name">account.treasury.forecast.form</field>
             <field name="model">account.treasury.forecast</field>
             <field name="arch" type="xml">
-                <form string="Treasury Forecast">
-                    <separator string="Account Treasury Forecast" colspan="4"/>
+                <form string="Previsión de Tesorería">    
+                    <header>
+                        <button string="Flujo de caja" name="show_week_wizard" type="object" status="draft" context= '{"forecast_id": active_id}' attrs="{'invisible': True}"/>
+                        <button string="Proyección semanal" type="action" name="%(action_open_wizard)d" /> 
+                    </header>                           
+                    <separator string="Previsión de Tesorería" colspan="4"/>
                     <group colspan="4" col="4">
                     <group colspan="4" col="4" >
                         <field name="name" colspan="4"/>
@@ -76,17 +90,17 @@
                         <field name="end_date" colspan="2" />
                     </group>
                     <notebook colspan="4">
-                        <page string="Out invoices">
+                        <page string="Facturas salientes">
                             <field name="out_invoice_ids" nolabel="1" />
                         </page>
-                        <page string="In invoices">
+                        <page string="Facturas entrantes">
                             <field name="in_invoice_ids" nolabel="1" />
                         </page>
-                        <page string="Recurring Payments">
+                        <page string="Pagos recurrentes">
                             <field name="recurring_line_ids" 
                                 context="{'default_line_type': 'recurring'}" nolabel="1"/>
                         </page>
-                        <page string="Variable Payments">
+                        <page string="Pagos variables">
                             <field name="variable_line_ids" 
                                 context="{'default_line_type': 'variable'}" nolabel="1"/>
                         </page>
@@ -111,18 +125,80 @@
             </field>
         </record>
 
+
+        <record model="ir.ui.view" id="account_treasury_forecast_wiz_form_view">
+            <field name="name">account.treasury.forecast.wiz.form</field>
+            <field name="model">account.treasury.forecast.weekwizard</field>
+            <field name="arch" type="xml">
+                <form string="Treasury Forecast Wizard">    
+                    <separator string="Wizard de flujo de caja semanal" colspan="4"/>
+                    <group colspan="4" col="4" >
+                        <field name="id" colspan="2" attrs="{'invisible': True}" />
+                        <field name="start_date" colspan="2"/>
+                        <field name="comentarios" colspan="2"/>
+                        <field name="forecast_id" colspan="2" attrs="{'invisible': True}"/>
+                        <button name="do_calculate_button" type="object" class="oe_highlight" string="Recalcular" attrs="{'invisible': True}" />
+                        <button name="do_calculate" type="object" class="oe_highlight" string="Recalcular 2" attrs="{'invisible': True}" />
+                    </group>
+                    <notebook colspan="4">
+                        <page string="Semana 1 y previos">
+                            <group col="2" colspan="2">
+                                <field name="in_invoice_s1" nolabel="1" />
+                                <field name="out_invoice_s1" nolabel="1" />
+                            </group>
+                        </page>
+                        <page string="Semana 2">
+                            <group col="2" colspan="2">
+                                <field name="in_invoice_s2" nolabel="1" />
+                                <field name="out_invoice_s2" nolabel="1" />
+                            </group>
+                        </page>
+                        <page string="Semana 3">
+                            <group col="2" colspan="2">
+                                <field name="in_invoice_s3" nolabel="1" />
+                                <field name="out_invoice_s3" nolabel="1" />
+                            </group>
+                        </page>
+                        <page string="Semana 4 y posteriores">
+                            <group col="2" colspan="2">
+                                <field name="in_invoice_s4" nolabel="1" />
+                                <field name="out_invoice_s4" nolabel="1" />
+                            </group>
+                        </page>
+                    </notebook>
+                </form>
+            </field>
+        </record>
+
+
+
+        <record model="ir.ui.view" id="account_treasury_forecast_wizard_invoice_tree_view">
+            <field name="name">account.treasury.forecast.wizard.invoice.tree</field>
+            <field name="model">account.treasury.forecast.wizard.invoice</field>
+            <field name="arch" type="xml">
+                <tree string="Invoices" editable="bottom">
+                    <field name="date_due" />
+                    <field name="invoice_id" />
+                    <field name="partner_id" />
+                    <field name="total_amount" sum="Total Amount" />
+                </tree>
+            </field>
+        </record>        
+
+
         <record id="action_account_treasury_forecast_form" model="ir.actions.act_window">
-            <field name="name">Treasury Forecast</field>
+            <field name="name">Previsión de Tesorería</field>
             <field name="res_model">account.treasury.forecast</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
             <field name="help">Treasury Forecast</field>
         </record>
 
-        <menuitem id="menu_account_treasury_forecast" name="Account Treasury Forecast"
+        <menuitem id="menu_account_treasury_forecast" name="Contabilidad - Previsión de Tesorería"
             parent="account.menu_finance" sequence="8" groups="account.group_account_user"/>
         <menuitem action="action_account_treasury_forecast_form" id="menu_account_treasury_forecast_form"
             parent="menu_account_treasury_forecast" groups="account.group_account_user"/>
 
     </data>
 </openerp>
+
